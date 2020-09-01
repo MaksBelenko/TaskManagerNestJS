@@ -2,12 +2,16 @@ import { Repository, EntityRepository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { Task } from './task.entity';
 import { TaskStatus } from './enums/task-status.enum';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { GetTaskFilterDto } from './dto/get-tasks-filter.dto';
 
 @EntityRepository(Task)
 export class TaskRepository extends Repository<Task> {
 
+    /**
+     * Gets all tasks with/without filters
+     * @param getTaskFilterDto DTO used for filters that are put in
+     */
     async getTasks(getTaskFilterDto: GetTaskFilterDto): Promise<Task[]> {
         const { search, status } = getTaskFilterDto;
 
@@ -44,6 +48,10 @@ export class TaskRepository extends Repository<Task> {
     }
 
 
+    /**
+     * Deletes the task with the provided ID
+     * @param id ID of the task to be deleted
+     */
     async deleteTask(id: number): Promise<Task> {
         let taskToRemove = await this.findOne(id);
 
