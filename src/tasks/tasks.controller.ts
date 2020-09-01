@@ -17,18 +17,21 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { GetTaskFilterDto } from './dto/get-tasks-filter.dto';
 import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipe';
 import { Task } from './task.entity';
+import { TaskStatus } from './enums/task-status.enum';
 
 @Controller('/tasks')
 export class TasksController {
     constructor(private tasksService: TasksService) {}
 
-    // @Get()
-    // getTasks(@Query(ValidationPipe) filterDto: GetTaskFilterDto): Task[] {
-    //     if (Object.keys(filterDto).length) {
-    //         return this.tasksService.getTaskWithFilters(filterDto);
-    //     }
-    //     return this.tasksService.getAllTasks();
-    // }
+    
+    @Get()
+    getTasks(@Query(ValidationPipe) filterDto: GetTaskFilterDto): Promise<Task[]> {
+        return this.tasksService.getTasks(filterDto);
+        // if (Object.keys(filterDto).length) {
+        //     return this.tasksService.getTaskWithFilters(filterDto);
+        // }
+        // return this.tasksService.getAllTasks();
+    }
 
     @Get('/:id')
     getTaskById(@Param('id', ParseIntPipe) id: number): Promise<Task> {
@@ -41,18 +44,18 @@ export class TasksController {
         return this.tasksService.createTask(createTaskDto);
     }
 
-    // @Delete('/:id')
-    // deleteTaskByID(@Param('id') id: string): Task {
-    //     return this.tasksService.deleteTaskById(id);
-    // }
+    @Delete('/:id')
+    deleteTaskByID(@Param('id', ParseIntPipe) id: number): Promise<Task> {
+        return this.tasksService.deleteTaskById(id);
+    }
 
-    // @Patch('/:id/status')
-    // updateTaskById(
-    //     @Param('id') id: string,
-    //     @Body('status', TaskStatusValidationPipe) status: TaskStatus
-    // ): Task {
-    //     return this.tasksService.updateTaskById(id, status);
-    // }
+    @Patch('/:id/status')
+    updateTaskById(
+        @Param('id', ParseIntPipe) id: number,
+        @Body('status', TaskStatusValidationPipe) status: TaskStatus
+    ): Promise<Task> {
+        return this.tasksService.updateTaskById(id, status);
+    }
 
 
 

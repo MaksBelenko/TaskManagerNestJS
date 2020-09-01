@@ -6,6 +6,7 @@ import { stat } from 'fs';
 import { TaskRepository } from './task.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './task.entity';
+import { TaskStatus } from './enums/task-status.enum';
 
 @Injectable()
 export class TasksService {
@@ -13,6 +14,10 @@ export class TasksService {
         @InjectRepository(TaskRepository)
         private taskRepository: TaskRepository,
     ) {}
+
+    async getTasks(getTaskFilterDto: GetTaskFilterDto): Promise<Task[]> {
+        return this.taskRepository.getTasks(getTaskFilterDto);
+    }
 
     // /**
     //  * Fetches all tasks without filters
@@ -51,7 +56,7 @@ export class TasksService {
      */
     async getTaskById(id: number): Promise<Task> {
         const foundTask = await this.taskRepository.findOne(id);
-        
+
         if (!foundTask) {
             throw new NotFoundException(`Task with id ${id} is not found`);
         }
@@ -63,28 +68,31 @@ export class TasksService {
      * Creates new task from dto
      * @param createTaskDto DTO used to pass the data
      */
-    createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+    async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
         return this.taskRepository.createTask(createTaskDto);
     }
 
-    // /**
-    //  * Deletes task if found by ID
-    //  * @param id Used to find the task
-    //  */
-    // deleteTaskById(id: string): Task {
-    //     const foundTask = this.getTaskById(id);
-    //     this.tasks = this.tasks.filter(task => task != foundTask);
-    //     return foundTask;
-    // }
+    /**
+     * Deletes task if found by ID
+     * @param id Used to find the task
+     */
+    async deleteTaskById(id: number): Promise<Task> {
+        return this.taskRepository.deleteTask(id);
+    }
 
-    // /**
-    //  * Updates task found by ID with information from DTO
-    //  * @param id Generated id
-    //  * @param updateTaskDto DTO that has task update info
-    //  */
-    // updateTaskById(id: string, status: TaskStatus): Task {
-    //     const task = this.getTaskById(id);
-    //     task.status = status;
-    //     return task;
-    // }
+    /**
+     * Updates task found by ID with information from DTO
+     * @param id Generated id
+     * @param updateTaskDto DTO that has task update info
+     */
+    async updateTaskById(id: number, status: TaskStatus): Promise<Task> {
+        const task = await this.getTaskById(id);
+
+        task.status = status;
+        await task.save();
+
+        return task;
+        // task.status = status;
+        // return task;
+    }
 }
