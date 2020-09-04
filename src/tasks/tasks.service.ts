@@ -7,6 +7,7 @@ import { TaskRepository } from './task.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './task.entity';
 import { TaskStatus } from './enums/task-status.enum';
+import { User } from '../auth/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -15,69 +16,45 @@ export class TasksService {
         private taskRepository: TaskRepository,
     ) {}
 
-    async getTasks(getTaskFilterDto: GetTaskFilterDto): Promise<Task[]> {
-        return this.taskRepository.getTasks(getTaskFilterDto);
+    async getTasks(
+        getTaskFilterDto: GetTaskFilterDto,
+        user: User
+    ): Promise<Task[]> {
+        return this.taskRepository.getTasks(getTaskFilterDto, user);
     }
 
-    // /**
-    //  * Fetches all tasks without filters
-    //  */
-    // getAllTasks(): Task[] {
-    //     return this.tasks;
-    // }
-
-    // /**
-    //  * Fetches tasks filtered by supplied DTO params
-    //  * @param filterDto DTO filter which is created from request params
-    //  */
-    // getTaskWithFilters(filterDto: GetTaskFilterDto): Task[] {
-    //     const { status, search } = filterDto;
-
-    //     let tasks = this.getAllTasks();
-
-    //     if (status) {
-    //         tasks = tasks.filter(task => task.status === status);
-    //     }
-
-    //     if (search) {
-    //         tasks = tasks.filter(
-    //             task =>
-    //                 task.title.includes(search) ||
-    //                 task.description.includes(search),
-    //         );
-    //     }
-
-    //     return tasks;
-    // }
 
     /**
      * Fetches single task by id
      * @param id ID used to find task in database
      */
-    async getTaskById(id: number): Promise<Task> {
-        const foundTask = await this.taskRepository.findOne(id);
-
-        if (!foundTask) {
-            throw new NotFoundException(`Task with id ${id} is not found`);
-        }
-
-        return foundTask;
+    async getTaskById(
+        id: number,
+        user: User
+    ): Promise<Task> {
+        return await this.taskRepository.getTaskById(id, user);
     }
 
     /**
      * Creates new task from dto
      * @param createTaskDto DTO used to pass the data
      */
-    async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-        return this.taskRepository.createTask(createTaskDto);
+    async createTask(
+        createTaskDto: CreateTaskDto,
+        user: User
+    ): Promise<Task> {
+        return this.taskRepository.createTask(createTaskDto, user);
     }
 
     /**
      * Deletes task if found by ID
      * @param id Used to find the task
      */
-    async deleteTaskById(id: number): Promise<Task> {
-        return this.taskRepository.deleteTask(id);
+    async deleteTaskById(
+        id: number,
+        user:  User
+    ): Promise<Task> {
+        return this.taskRepository.deleteTask(id, user);
     }
 
     /**
@@ -85,8 +62,12 @@ export class TasksService {
      * @param id Generated id
      * @param updateTaskDto DTO that has task update info
      */
-    async updateTaskById(id: number, status: TaskStatus): Promise<Task> {
-        const task = await this.getTaskById(id);
+    async updateTaskById(
+        id: number, 
+        status: TaskStatus,
+        user: User
+    ): Promise<Task> {
+        const task = await this.getTaskById(id, user);
 
         task.status = status;
         await task.save();
