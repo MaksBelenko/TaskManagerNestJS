@@ -2,12 +2,14 @@ import { Repository, EntityRepository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { Task } from './task.entity';
 import { TaskStatus } from './enums/task-status.enum';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, Logger, InternalServerErrorException } from '@nestjs/common';
 import { GetTaskFilterDto } from './dto/get-tasks-filter.dto';
 import { User } from '../auth/user.entity';
 
 @EntityRepository(Task)
 export class TaskRepository extends Repository<Task> {
+
+    private logger = new Logger('TaskRepository');
 
     /**
      * Gets all tasks with/without filters
@@ -31,9 +33,13 @@ export class TaskRepository extends Repository<Task> {
             query.andWhere('(task.title LIKE :search OR task.description LIKE :search)', { search: `%${search}%` })
         }
 
-        const tasks = await query.getMany();
-        
-        return tasks;
+        try {
+            const tasks = await query.getMany();
+            return tasks;
+        } catch (error) {
+            this.logger.error(`Failed get tasks for user ${user.username}. Filters: ${JSON.stringify(getTaskFilterDto)}`, error.stack);
+            throw new InternalServerErrorException();
+        }
     }
 
     /**
@@ -70,7 +76,13 @@ export class TaskRepository extends Repository<Task> {
         task.description = description;
         task.status = TaskStatus.OPEN;
         task.user = user;
-        await task.save();
+
+        try {
+            await task.save();
+        } catch (error) {
+            this.logger.error(`Failed to create task for user ${user.username}. Data: ${JSON.stringify(createTaskDto)}`, error.stack)
+            throw new InternalServerErrorException();
+        }
 
         // removes user from task (not to expose
         // password and salt when sending a response)
